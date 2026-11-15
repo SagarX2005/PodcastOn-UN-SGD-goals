@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "MyPodcastApp",
+    "slug": "MyPodcastApp",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.jpg",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/icon.jpg",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryAddUsageDescription": "This app needs access to save podcasts to your photo library.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to save podcasts.",
+        "NSMicrophoneUsageDescription": "This app needs access to your microphone for audio recording features."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.jpg",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.shlok2601.MyPodcastApp",
+      "permissions": [
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_EXTERNAL_STORAGE",
+        "READ_MEDIA_AUDIO",
+        "RECORD_AUDIO",
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icon.jpg"
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow MyPodcastApp to save podcasts to your device.",
+          "savePhotosPermission": "Allow MyPodcastApp to save podcasts to your device.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],
+      "expo-video"
+    ]
+  }
+}

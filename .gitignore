@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+**/node_modules/
+package-lock.json
+**/package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment Variables & Sensitive Credentials
+.env
+.env*
+*.env
+*.env.local
+**/.env
+**/.env*
+**/*.env*
+service-account.json
+**/service-account.json
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Expo, Mobile & Build Artifacts
+.expo/
+**/.expo/
+.expo-shared/
+web-build/
+android/
+ios/
+
+# Deployment & OS
+.vercel/
+**/.vercel/
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
