@@ -117,6 +117,12 @@ node backend/server.js
 
 ---
 
+## 🎨 Media & Asset Attribution
+
+All podcast cover thumbnails, brand graphics, background textures, video tutorials, and animations are documented and attributed in [`assets/ATTRIBUTION.md`](assets/ATTRIBUTION.md).
+
+---
+
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
