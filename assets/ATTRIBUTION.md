@@ -100,3 +100,4 @@ All functional user interface icons (navigation bars, action buttons, status pil
 ## 7. Academic Integrity & Ethics Statement
 
 All media assets included in this repository have been audited to ensure compliance with university research standards, copyright statutes, and digital intellectual property regulations. No copyrighted images, watermarked stock photographs, or uncredited third-party media are utilized in this project.
+

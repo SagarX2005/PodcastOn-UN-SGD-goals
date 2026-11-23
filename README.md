@@ -117,6 +117,20 @@ node backend/server.js
 
 ---
 
+## 💾 Database Backup & Disaster Recovery
+
+- **Hosting & Tier**: Supabase PostgreSQL (Free Tier).
+- **Chosen Backup Method**: **Weekly Manual Logical Dump (`pg_dump` / Supabase CLI)**.
+  - Due to the project operating on the Supabase Free Plan (which does not include native automated daily backups without a Pro subscription), data preservation is handled via scheduled weekly logical backups:
+    ```bash
+    # Weekly manual dump of database schema and table records
+    supabase db dump -f supabase/backups/backup_$(date +%Y%m%d).sql
+    ```
+- **Disaster Recovery**: Instant schema reconstruction is guaranteed via the version-controlled [`supabase/schema.sql`](supabase/schema.sql), allowing complete zero-loss recovery by executing the schema followed by restoring the latest weekly dump.
+- **Pro Tier Option**: Supports seamless migration to Supabase Pro's native daily automated backups and 7-day Point-in-Time Recovery (PITR) when scaling.
+
+---
+
 ## 🎨 Media & Asset Attribution
 
 All podcast cover thumbnails, brand graphics, background textures, video tutorials, and animations are documented and attributed in [`assets/ATTRIBUTION.md`](assets/ATTRIBUTION.md).
