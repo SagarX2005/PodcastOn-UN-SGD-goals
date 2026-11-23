@@ -131,6 +131,26 @@ node backend/server.js
 
 ---
 
+## 🌐 Deployment & Hosting Architecture (Two-Stage Model)
+
+The project operates under a two-stage deployment architecture balancing cost efficiency during academic evaluation with instant cloud scalability:
+
+### 1. Demonstration & Evaluation Setup (Current State)
+- **Audio Synthesis Backend**: Self-hosted local microservice running on `localhost:3001` (`node backend/server.js`) on the developer workstation ($0.00 infrastructure cost).
+- **Physical Device Bridging**: Physical Android phones connect via USB debugging utilizing Android Debug Bridge (ADB) reverse port forwarding:
+  ```bash
+  adb reverse tcp:8081 tcp:8081 # Metro Bundler
+  adb reverse tcp:3001 tcp:3001 # Audio Backend
+  ```
+- **Emulator Bridging**: Android Studio emulator routes via the standard Android loopback alias `http://10.0.2.2:3001`.
+- **Database & Media Storage**: Fully cloud-hosted on **Supabase Cloud** (PostgreSQL in `ap-southeast-1` region) and **Supabase Storage** (`podcasts` bucket).
+
+### 2. Production Cloud Blueprint
+- **Cloud URL Support**: The mobile client (`screens/PodcastGeneratorScreen.js`) prioritizes `process.env.EXPO_PUBLIC_BACKEND_URL` before falling back to local IP routes.
+- **Zero-Code Cloud Migration**: Deploying `backend/server.js` to cloud container services (e.g., Render, Railway, or Google Cloud Run) requires only setting `EXPO_PUBLIC_BACKEND_URL=https://your-cloud-backend.com` in `.env` with zero client code modifications.
+
+---
+
 ## 🎨 Media & Asset Attribution
 
 All podcast cover thumbnails, brand graphics, background textures, video tutorials, and animations are documented and attributed in [`assets/ATTRIBUTION.md`](assets/ATTRIBUTION.md).

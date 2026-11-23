@@ -126,3 +126,8 @@ To ensure complete reproducibility for project evaluation and academic examinati
    - **Operating System**: Android 14 (API Level 34)
    - **Test Scope**: Responsive layout validation across screen density, orientation, and navigation transitions.
 
+### Audio Backend & Network Architecture
+- **Audio Microservice**: Node.js Express server (`backend/server.js`) running locally on `http://localhost:3001` with Google Cloud Text-to-Speech SDK.
+- **Physical Device Bridging**: ADB USB port reverse proxy (`adb reverse tcp:3001 tcp:3001`).
+- **Production Gateway**: Dynamically configured via `EXPO_PUBLIC_BACKEND_URL` for cloud container hosting (Render / Google Cloud Run).
+
