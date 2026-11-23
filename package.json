@@ -1,6 +1,6 @@
 {
   "name": "mypodcastapp",
-  "license": "0BSD",
+  "license": "MIT",
   "version": "1.0.0",
   "main": "index.ts",
   "private": true,
