@@ -101,3 +101,28 @@ All functional user interface icons (navigation bars, action buttons, status pil
 
 All media assets included in this repository have been audited to ensure compliance with university research standards, copyright statutes, and digital intellectual property regulations. No copyrighted images, watermarked stock photographs, or uncredited third-party media are utilized in this project.
 
+---
+
+## 8. Development & Verification Hardware Environment
+
+To ensure complete reproducibility for project evaluation and academic examination, the application was developed, bundled, and verified under the following physical and virtual environments:
+
+### Development Workstation (Laptop)
+- **Processor (CPU)**: 11th Gen Intel(R) Core(TM) i5-11400H @ 2.70GHz (6 Cores, 12 Threads, Max Turbo 4.50 GHz)
+- **System Memory (RAM)**: 8.00 GB DDR4 (7.73 GB usable)
+- **Operating System**: Windows 11 Home Single Language (64-bit, Version 26H2 / Build 26300)
+- **Runtime Environment**: Node.js v22.22.0, npm v11.6.4
+- **Mobile SDK**: Expo SDK 53 (~53.0.22), React Native 0.79.5
+
+### Target Testing Devices (2 Devices Tested)
+1. **Physical Mobile Device**:
+   - **Model**: OnePlus Nord 2 5G (Model Number: `DN2101` / `DN2101IND`)
+   - **Processor / Chipset**: MediaTek Dimensity 1200-AI
+   - **Device RAM**: 8.00 GB LPDDR4X
+   - **Operating System**: Android 12 / 13 (OxygenOS, API Level 31/33)
+   - **Test Scope**: Physical touch interaction, audio playback via Expo AV, local network synthesis via ADB port reversal (`adb reverse tcp:8081` & `tcp:3001`), and secure keystore storage.
+2. **Virtual Device (Android Emulator)**:
+   - **Model**: Google Pixel 7 AVD (`sdk_gphone64_x86_64`)
+   - **Operating System**: Android 14 (API Level 34)
+   - **Test Scope**: Responsive layout validation across screen density, orientation, and navigation transitions.
+
