@@ -11,7 +11,6 @@ create table if not exists public.profiles (
   email text,
   avatar_url text,
   bio text,
-  openrouter_api_key text,
   preferred_language text,
   created_at timestamp with time zone default timezone('utc'::text, now())
 );
@@ -248,4 +247,61 @@ create policy "Public Access Profile Pictures" on storage.objects
 
 create policy "Authenticated Upload Profile Pictures" on storage.objects
   for insert with check (bucket_id = 'profile-pictures');
+
+
+-- BIAS REVIEW + CONTENT REPORTS
+alter table public.podcasts
+  add column if not exists bias_check jsonb,
+  add column if not exists bias_retries integer default 0;
+
+create table if not exists public.content_reports (
+  id uuid default gen_random_uuid() primary key,
+  global_podcast_id uuid references public.global_podcasts on delete cascade not null,
+  reporter_id uuid references auth.users on delete cascade not null,
+  reason text not null check (reason in ('stereotype','inaccurate','offensive','other')),
+  details text,
+  status text default 'open',
+  created_at timestamptz default timezone('utc'::text, now()),
+  unique (global_podcast_id, reporter_id)
+);
+
+alter table public.content_reports enable row level security;
+
+drop policy if exists "Users can report" on public.content_reports;
+create policy "Users can report" on public.content_reports
+  for insert with check (auth.uid() = reporter_id);
+
+drop policy if exists "Users see own reports" on public.content_reports;
+create policy "Users see own reports" on public.content_reports
+  for select using (auth.uid() = reporter_id);
+
+-- REMOVE PLAIN-TEXT API KEYS (keys now live only in the device secure keystore)
+update public.profiles set openrouter_api_key = null where openrouter_api_key is not null;
+alter table public.profiles drop column if exists openrouter_api_key;
+
+/*
+-- =====================================================
+-- REVIEW BEFORE RUNNING: STORAGE POLICY HARDENING
+-- =====================================================
+-- 1. Podcasts bucket: drop open upload policy for anon/public.
+-- Backend audio synthesis runs with service_role key, which bypasses RLS.
+drop policy if exists "Allow Upload to Podcasts" on storage.objects;
+
+-- 2. Profile pictures bucket: restrict upload to authenticated users.
+-- Note: ProfileScreen.js uploads files as `<user.id>_<timestamp>.<ext>` at the bucket root (not in a user-id subfolder),
+-- so an authenticated-role check is applied here.
+drop policy if exists "Allow Upload to Profile Pictures" on storage.objects;
+
+create policy "Authenticated users can upload profile pictures" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'profile-pictures');
+
+create policy "Authenticated users can update profile pictures" on storage.objects
+  for update to authenticated
+  using (bucket_id = 'profile-pictures');
+
+create policy "Authenticated users can delete profile pictures" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'profile-pictures');
+*/
 

@@ -88,7 +88,7 @@ flowchart LR
    ```
 
 4. **Database Setup:**
-   Run the complete SQL setup script located at [`supabase/schema.sql`](supabase/schema.sql) in your Supabase SQL Editor. This will automatically set up all 10 tables, Row Level Security (RLS) policies, triggers, and storage buckets (`podcasts` and `profile-pictures`).
+   Run the complete SQL setup script located at [`supabase/schema.sql`](supabase/schema.sql) in your Supabase SQL Editor. This will automatically set up all 11 tables, Row Level Security (RLS) policies, triggers, and storage buckets (`podcasts` and `profile-pictures`).
 
 ---
 
@@ -113,7 +113,7 @@ node backend/server.js
 ## 🔒 Security & Privacy
 
 - All sensitive keys (`.env`, `service-account.json`, private tokens) are excluded via `.gitignore`.
-- User API keys are stored with Row Level Security (RLS) policies ensuring each user only accesses their own credentials and content.
+- User API keys are stored exclusively on the user's phone in the device secure keystore (via expo-secure-store) and are never sent to or stored in the database.
 
 ---
 

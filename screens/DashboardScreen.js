@@ -18,6 +18,7 @@ import { Feather } from "@expo/vector-icons";
 import { useUser } from "../UserContext";
 import { spacing } from "../styles/globalStyles";
 import { supabase } from "../supabase";
+import { getApiKey } from "../utils/apiKeyStore";
 import moment from "moment";
 import Tooltip from "react-native-walkthrough-tooltip";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -720,15 +721,16 @@ useEffect(() => {
       // Profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("avatar_url, full_name, openrouter_api_key")
+        .select("avatar_url, full_name")
         .eq("id", authUser.id)
         .maybeSingle();
 
       if (!profileError && profile) {
         if (profile.avatar_url) setProfilePicUrl(profile.avatar_url);
         if (profile.full_name) setUserName(profile.full_name);
-        setHasApiKey(!!profile.openrouter_api_key);
       }
+      const key = await getApiKey(authUser.id);
+      setHasApiKey(!!key);
 
       // Podcasts
       const { data: podcasts, error: podcastError } = await supabase

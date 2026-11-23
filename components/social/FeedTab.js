@@ -49,6 +49,8 @@ const GlobalPodcastCard = ({
   const [loadingComments, setLoadingComments] = useState(false);
   const [submittingComment, setSubmittingComment] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reporting, setReporting] = useState(false);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -260,6 +262,31 @@ const GlobalPodcastCard = ({
   const handleCloseComments = () => {
     setShowComments(false);
     setNewComment('');
+  };
+
+  const submitReport = async (reason) => {
+    if (reporting) return;
+    setReporting(true);
+    try {
+      const { error } = await supabase.from('content_reports').insert({
+        global_podcast_id: podcast.id,
+        reporter_id: currentUserId,
+        reason,
+      });
+      setShowReport(false);
+      if (error) {
+        if (error.code === '23505') {
+          Alert.alert('Already reported', 'You have already reported this podcast.');
+          return;
+        }
+        throw error;
+      }
+      Alert.alert('Thank you', 'Your report was recorded and will be reviewed.');
+    } catch (e) {
+      Alert.alert('Could not submit report', e?.message || 'Please try again.');
+    } finally {
+      setReporting(false);
+    }
   };
 
   return (
@@ -735,6 +762,16 @@ const GlobalPodcastCard = ({
                 </Text>
               )}
             </TouchableOpacity>
+
+            {podcast.user_id !== currentUserId && (
+              <TouchableOpacity
+                onPress={() => setShowReport(true)}
+                activeOpacity={0.7}
+                style={{ flexDirection: 'row', alignItems: 'center', marginLeft: 'auto' }}
+              >
+                <Feather name="flag" size={22} color="#AAA" />
+              </TouchableOpacity>
+            )}
           </View>
 
           {commentsCount > 0 && (
@@ -1093,6 +1130,71 @@ const GlobalPodcastCard = ({
             </View>
           </View>
         </KeyboardAvoidingView>
+      </Modal>
+
+      {/* REPORT MODAL */}
+      <Modal
+        visible={showReport}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReport(false)}
+      >
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowReport(false)}
+        >
+          <TouchableOpacity activeOpacity={1} onPress={() => {}}>
+            <View
+              style={{
+                backgroundColor: '#0F0F1E',
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: 20,
+              }}
+            >
+              <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 18, marginBottom: 4 }}>
+                Report this podcast
+              </Text>
+              <Text style={{ color: '#AAA', fontSize: 14, marginBottom: 16 }}>
+                What is the problem?
+              </Text>
+
+              {[
+                { value: 'stereotype', label: 'Stereotype or misrepresentation of a faith' },
+                { value: 'inaccurate', label: 'Inaccurate or misleading content' },
+                { value: 'offensive', label: 'Offensive or disrespectful content' },
+                { value: 'other', label: 'Something else' },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.value}
+                  onPress={() => submitReport(item.value)}
+                  disabled={reporting}
+                  style={{
+                    paddingVertical: 14,
+                    borderBottomWidth: 1,
+                    borderBottomColor: 'rgba(255,255,255,0.08)',
+                  }}
+                >
+                  {reporting ? (
+                    <ActivityIndicator size="small" color="#AAA" />
+                  ) : (
+                    <Text style={{ color: '#FFF', fontSize: 15 }}>{item.label}</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity
+                onPress={() => setShowReport(false)}
+                style={{ paddingVertical: 14 }}
+              >
+                <Text style={{ color: '#FF69B4', fontSize: 15, fontWeight: '700', textAlign: 'center' }}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </>
   );

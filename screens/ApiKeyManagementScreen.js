@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather, Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabase';
 import { spacing } from '../styles/globalStyles';
+import { getApiKey, saveApiKey, removeApiKey } from '../utils/apiKeyStore';
 
 const ApiKeyManagementScreen = ({ navigation }) => {
   const [apiKey, setApiKey] = useState('');
@@ -38,17 +39,12 @@ const ApiKeyManagementScreen = ({ navigation }) => {
         return;
       }
 
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('openrouter_api_key')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (!profileError && profile?.openrouter_api_key) {
-        setSavedKey(profile.openrouter_api_key);
+      const key = await getApiKey(user.id);
+      if (key) {
+        setSavedKey(key);
       }
     } catch (error) {
-      console.error('Error loading API key:', error);
+      console.error('Error loading API key:', error?.message);
     } finally {
       setIsLoading(false);
     }
@@ -110,15 +106,8 @@ const ApiKeyManagementScreen = ({ navigation }) => {
         return;
       }
 
-      // Save encrypted key to database
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .upsert({ id: user.id, openrouter_api_key: apiKey.trim() }, { onConflict: 'id' });
-
-      if (updateError) {
-        Alert.alert('Error', 'Failed to save API key. Please try again.');
-        return;
-      }
+      // Save key to device secure keystore
+      await saveApiKey(user.id, apiKey.trim());
 
       setSavedKey(apiKey.trim());
       setIsEditing(false);
@@ -146,10 +135,7 @@ const ApiKeyManagementScreen = ({ navigation }) => {
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) return;
 
-              await supabase
-                .from('profiles')
-                .update({ openrouter_api_key: null })
-                .eq('id', user.id);
+              await removeApiKey(user.id);
 
               setSavedKey('');
               setIsEditing(false);

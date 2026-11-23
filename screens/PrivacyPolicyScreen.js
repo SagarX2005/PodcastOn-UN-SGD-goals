@@ -135,6 +135,10 @@ const PrivacyPolicyScreen = () => {
                 icon="bar-chart-2"
                 text="Anonymous usage patterns (not content) may be used to improve app performance and AI quality."
               />
+              <PolicyPoint
+                icon="shield"
+                text="Generated scripts are reviewed by an AI model for fairness, and content reports you submit are stored with your user ID."
+              />
             </AppCard>
 
             {/* Security */}

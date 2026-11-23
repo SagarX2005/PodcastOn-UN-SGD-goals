@@ -27,6 +27,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 import OpenAI from 'openai';
 import { supabase } from '../supabase';
 import { useFocusEffect } from '@react-navigation/native';
+import { getApiKey } from '../utils/apiKeyStore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -162,6 +163,7 @@ const LoadingModal = ({ visible, status, progress }) => {
           }}>
             {status === 'script' ? 'Crafting Script...' : 
              status === 'audio' ? 'Generating Audio...' : 
+             status === 'reviewing' ? 'Reviewing for Fairness...' :
              'Processing...'}
           </Text>
 
@@ -173,6 +175,7 @@ const LoadingModal = ({ visible, status, progress }) => {
           }}>
             {status === 'script' ? 'Creating your personalized podcast script' : 
              status === 'audio' ? 'Converting script to audio' : 
+             status === 'reviewing' ? 'Checking the script for respectful, balanced representation' :
              'Please wait...'}
           </Text>
 
@@ -583,22 +586,11 @@ const PodcastGeneratorScreen = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('openrouter_api_key')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error fetching API key:', error);
-        } else if (data?.openrouter_api_key) {
-          setUserApiKey(data.openrouter_api_key);
-        } else {
-          setUserApiKey(null);
-        }
+        const key = await getApiKey(user.id);
+        setUserApiKey(key || null);
       }
     } catch (error) {
-      console.error('Error loading API key:', error);
+      console.error('Error loading API key:', error?.message);
     } finally {
       setLoadingApiKey(false);
     }
@@ -687,7 +679,7 @@ const PodcastGeneratorScreen = () => {
       });
       return completion.choices[0].message.content;
     } catch (apiError) {
-      console.error("OpenRouter API error:", apiError);
+      console.error("OpenRouter API error:", apiError?.status, apiError?.message);
       if (apiError.status === 401 || apiError.message?.includes("401") || apiError.message?.includes("User not found")) {
         throw new Error("Invalid or incomplete OpenRouter API key. Please re-enter your key in Settings -> API Key Management.");
       }
@@ -698,7 +690,57 @@ const PodcastGeneratorScreen = () => {
     }
   }
 
-  const savePodcastToSupabase = async (title, script) => {
+  const BIAS_RUBRIC = `You review interfaith educational podcast scripts. Check the script for:
+1. Stereotypes or reductive portrayals of the named tradition.
+2. Inflammatory, negative or disrespectful tone toward any faith.
+3. A tradition presented as superior or as the only correct view.
+4. Religious doctrine stated as fact without attribution.
+Flag only clear problems. A neutral, respectful description of what a tradition believes is NOT a problem.
+Return ONLY JSON, no markdown: {"flagged": true|false, "issues": ["short issue", ...]}`;
+
+  async function reviewScript(script, religionLabel) {
+    const client = new OpenAI({
+      apiKey: userApiKey,
+      baseURL: "https://openrouter.ai/api/v1",
+      dangerouslyAllowBrowser: true,
+    });
+    try {
+      const r = await client.chat.completions.create({
+        model: "deepseek/deepseek-chat-v3-0324",
+        messages: [{
+          role: "user",
+          content: `${BIAS_RUBRIC}\n\nTradition: ${religionLabel}\n\nScript:\n${script}`,
+        }],
+        max_tokens: 400,
+        temperature: 0,
+      });
+      const raw = (r.choices[0].message.content || "").replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(raw);
+      return { flagged: !!parsed.flagged, issues: Array.isArray(parsed.issues) ? parsed.issues : [] };
+    } catch (e) {
+      console.warn("Bias review failed:", e?.message);
+      return { flagged: false, issues: [], error: e?.message || "review_failed" }; // fail-open by design
+    }
+  }
+
+  async function generateReviewedScript(prompt, religionLabel) {
+    let script = await generateScriptFromOpenRouter(prompt);
+    setGenerationStatus('reviewing');
+    let check = await reviewScript(script, religionLabel);
+    let retries = 0;
+    if (check.flagged) {
+      retries = 1;
+      const firstPassIssues = check.issues;
+      setGenerationStatus('script');
+      const fixPrompt = `${prompt}\n\nRevision required. A reviewer flagged these problems in an earlier draft:\n- ${firstPassIssues.join("\n- ")}\nRewrite the script and fix every one of them. Keep all original structure and length requirements.`;
+      script = await generateScriptFromOpenRouter(fixPrompt);
+      setGenerationStatus('reviewing');
+      check = { ...(await reviewScript(script, religionLabel)), firstPassIssues };
+    }
+    return { script, check, retries };
+  }
+
+  const savePodcastToSupabase = async (title, script, check, retries) => {
     const { data: { user }, error: userError } = await supabase.auth.getUser();
 
     if (userError || !user) {
@@ -731,6 +773,8 @@ const PodcastGeneratorScreen = () => {
         style,
         religion: religionToSave,
         language: language,
+        bias_check: check || null,
+        bias_retries: retries || 0,
       }])
       .select()
       .single();
@@ -770,29 +814,17 @@ const PodcastGeneratorScreen = () => {
         return;
       }
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('openrouter_api_key')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching API key:', error);
-        setErrorMessage('Error loading API key. Please try again.');
-        setShowErrorModal(true);
-        return;
-      }
-
-      if (!data?.openrouter_api_key) {
+      const key = await getApiKey(user.id);
+      if (!key) {
         setErrorMessage('Please set your OpenRouter API key in the API Key Management screen.');
         setShowErrorModal(true);
         return;
       }
 
       // Update state with latest API key
-      setUserApiKey(data.openrouter_api_key);
+      setUserApiKey(key);
     } catch (error) {
-      console.error('Error checking API key:', error);
+      console.error('Error checking API key:', error?.message);
       setErrorMessage('Error checking API key. Please try again.');
       setShowErrorModal(true);
       return;
@@ -853,31 +885,63 @@ Closing requirement:
     try {
       // Step 1: Generate Script
       setProgress(20);
-      const script = await generateScriptFromOpenRouter(prompt);
+      const religionLabel = religion === 'Other' && customReligion ? customReligion : religion || 'None';
+      const { script, check, retries } = await generateReviewedScript(prompt, religionLabel);
 
       setProgress(40);
-      const podcastId = await savePodcastToSupabase(podcastTitle, script);
+      const podcastId = await savePodcastToSupabase(podcastTitle, script, check, retries);
 
       // Step 2: Generate Audio
       setGenerationStatus('audio');
       setProgress(60);
 
-      const backendUrl = Platform.OS === 'android' ? 'http://10.0.2.2:3001' : 'http://localhost:3001';
-      let res;
-      try {
-        res = await fetch(`${backendUrl}/api/generatePodcast`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ podcastId }),
-        });
-      } catch (networkErr) {
-        // Fallback to localhost if reverse proxy is active
-        res = await fetch('http://localhost:3001/api/generatePodcast', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ podcastId }),
-        });
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsGenerating(false);
+        setGenerationStatus('idle');
+        Alert.alert('Session Expired', 'Please log in again.');
+        return;
       }
+
+      const endpoints = [
+        process.env.EXPO_PUBLIC_BACKEND_URL || null,
+        Platform.OS === 'android' ? 'http://10.0.2.2:3001' : null,
+        'http://localhost:3001',
+        'http://172.20.10.2:3001',
+      ].filter(Boolean);
+
+      let res;
+      let lastErr;
+      for (const endpoint of endpoints) {
+        try {
+          res = await fetch(`${endpoint}/api/generatePodcast`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ podcastId }),
+          });
+          if (res) {
+            if (res.status === 401) {
+              setIsGenerating(false);
+              setGenerationStatus('idle');
+              Alert.alert('Unauthorized', 'Please log in again');
+              return;
+            }
+            if (res.status === 403) {
+              setIsGenerating(false);
+              setGenerationStatus('idle');
+              Alert.alert('Forbidden', 'You can only create audio for your own podcasts');
+              return;
+            }
+            break;
+          }
+        } catch (networkErr) {
+          lastErr = networkErr;
+        }
+      }
+      if (!res) throw lastErr || new Error('Could not connect to audio backend server.');
 
       const result = await res.json();
 

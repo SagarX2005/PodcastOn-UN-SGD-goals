@@ -33,7 +33,10 @@
         "READ_MEDIA_AUDIO",
         "RECORD_AUDIO",
         "INTERNET",
-        "ACCESS_NETWORK_STATE"
+        "ACCESS_NETWORK_STATE",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.ACCESS_MEDIA_LOCATION"
       ]
     },
     "web": {
@@ -49,7 +52,13 @@
           "isAccessMediaLocationEnabled": true
         }
       ],
-      "expo-video"
-    ]
+      "expo-video",
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "3cae0d6b-beee-4aee-8c4b-9360bfe81779"
+      }
+    }
   }
 }

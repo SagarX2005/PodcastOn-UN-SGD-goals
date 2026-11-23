@@ -132,7 +132,7 @@ const FAQScreen = () => {
     {
       question: "How does the AI create interfaith perspectives?",
       answer:
-        "The AI explains each SDG through religious viewpoints using a culturally respectful tone. We include safeguards against bias so that content promotes peace, empathy, and shared responsibility."
+        "The AI explains each SDG through religious viewpoints using a culturally respectful tone. Every script is checked by an AI reviewer for stereotypes and disrespectful framing, and is rewritten once if a problem is found. You can also report any shared podcast using the flag icon, and we will review it."
     },
   ];
 
