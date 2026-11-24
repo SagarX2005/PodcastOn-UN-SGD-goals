@@ -11,6 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  NativeModules,
   Keyboard,
   TouchableWithoutFeedback,
   Modal,
@@ -903,11 +904,17 @@ Closing requirement:
         return;
       }
 
+      const metroHost = NativeModules?.SourceCode?.scriptURL
+        ? NativeModules.SourceCode.scriptURL.split('://')[1]?.split(':')[0]
+        : null;
+
       const endpoints = [
         process.env.EXPO_PUBLIC_BACKEND_URL || null,
+        metroHost ? `http://${metroHost}:3001` : null,
         Platform.OS === 'android' ? 'http://10.0.2.2:3001' : null,
         'http://localhost:3001',
         'http://172.20.10.2:3001',
+        'http://172.20.10.13:3001',
       ].filter(Boolean);
 
       let res;
