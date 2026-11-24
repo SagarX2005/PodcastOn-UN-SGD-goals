@@ -1,4 +1,4 @@
-﻿# Resona — Database Backup Utility (PowerShell)
+# Resona — Database Backup Utility (PowerShell)
 # Executes a logical SQL dump of the Supabase PostgreSQL database schema and data.
 
 param (
@@ -57,3 +57,4 @@ if (Test-Path $OutputFile) {
     $size = (Get-Item $OutputFile).Length
     Write-Host "Backup completed successfully! Size: $([math]::Round($size / 1KB, 2)) KB" -ForegroundColor Green
 }
+

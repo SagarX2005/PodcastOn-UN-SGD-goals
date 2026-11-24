@@ -34,3 +34,4 @@ fi
 
 echo "Backup completed successfully!"
 ls -lh "${OUTPUT_FILE}"
+
