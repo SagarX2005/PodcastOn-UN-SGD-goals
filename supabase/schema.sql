@@ -279,17 +279,14 @@ create policy "Users see own reports" on public.content_reports
 update public.profiles set openrouter_api_key = null where openrouter_api_key is not null;
 alter table public.profiles drop column if exists openrouter_api_key;
 
-/*
 -- =====================================================
--- REVIEW BEFORE RUNNING: STORAGE POLICY HARDENING
+-- STORAGE POLICY HARDENING (ENFORCED)
 -- =====================================================
--- 1. Podcasts bucket: drop open upload policy for anon/public.
+-- 1. Podcasts bucket: open upload policy for anon/public dropped.
 -- Backend audio synthesis runs with service_role key, which bypasses RLS.
 drop policy if exists "Allow Upload to Podcasts" on storage.objects;
 
 -- 2. Profile pictures bucket: restrict upload to authenticated users.
--- Note: ProfileScreen.js uploads files as `<user.id>_<timestamp>.<ext>` at the bucket root (not in a user-id subfolder),
--- so an authenticated-role check is applied here.
 drop policy if exists "Allow Upload to Profile Pictures" on storage.objects;
 
 create policy "Authenticated users can upload profile pictures" on storage.objects
@@ -303,5 +300,4 @@ create policy "Authenticated users can update profile pictures" on storage.objec
 create policy "Authenticated users can delete profile pictures" on storage.objects
   for delete to authenticated
   using (bucket_id = 'profile-pictures');
-*/
 

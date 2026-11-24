@@ -253,6 +253,12 @@ const server = http.createServer((req, res) => {
       if (isTooLarge) return;
       try {
         req.body = bodyStr ? JSON.parse(bodyStr) : {};
+      } catch (parseErr) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+        return;
+      }
+      try {
         await handleGeneratePodcast(req, res);
       } catch (err) {
         console.error('Server error:', err?.message || 'Unknown error');

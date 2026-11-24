@@ -1,15 +1,14 @@
-
 {
-  "name": "podcast-backend",
+  "name": "resona-audio-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "server.js",
   "type": "module",
-  "dependencies": {
-    "@aws-sdk/client-polly": "^3.x",
-    "@supabase/supabase-js": "^2.x",
-    "dotenv": "^16.x"
-  },
   "scripts": {
-    "start": "vercel dev"
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@google-cloud/text-to-speech": "^6.3.0",
+    "@supabase/supabase-js": "^2.57.4",
+    "dotenv": "^17.2.2"
   }
 }

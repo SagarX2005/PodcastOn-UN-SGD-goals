@@ -21,6 +21,7 @@ const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const [nameFocused, setNameFocused] = useState(false);
@@ -56,6 +57,10 @@ const SignupScreen = ({ navigation }) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       showAlert('Error', 'Please enter a valid email address');
+      return;
+    }
+    if (!agreeTerms) {
+      showAlert('Consent Required', 'Please accept the Terms of Service and Privacy Policy to continue');
       return;
     }
 
@@ -334,6 +339,43 @@ const SignupScreen = ({ navigation }) => {
                         color="rgba(245,245,245,0.7)"
                       />
                     </TouchableOpacity>
+                  </View>
+
+                  {/* Terms & Privacy Consent Checkbox */}
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, marginBottom: spacing.xs }}>
+                    <TouchableOpacity
+                      activeOpacity={0.7}
+                      onPress={() => setAgreeTerms(!agreeTerms)}
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 6,
+                        borderWidth: 1.5,
+                        borderColor: agreeTerms ? '#8A2BE2' : 'rgba(245,245,245,0.4)',
+                        backgroundColor: agreeTerms ? '#8A2BE2' : 'rgba(255,255,255,0.05)',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginRight: 10,
+                      }}
+                    >
+                      {agreeTerms && <Feather name="check" size={15} color="#FFFFFF" />}
+                    </TouchableOpacity>
+                    <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <Text style={{ color: 'rgba(245,245,245,0.7)', fontSize: 13 }}>
+                        I agree to the{' '}
+                      </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('Terms')}>
+                        <Text style={{ color: '#FF69B4', fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' }}>
+                          Terms of Service
+                        </Text>
+                      </TouchableOpacity>
+                      <Text style={{ color: 'rgba(245,245,245,0.7)', fontSize: 13 }}> and </Text>
+                      <TouchableOpacity onPress={() => navigation.navigate('PrivacyPolicy')}>
+                        <Text style={{ color: '#FF69B4', fontSize: 13, fontWeight: '600', textDecorationLine: 'underline' }}>
+                          Privacy Policy
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
 
                   {/* Create Account Button */}
